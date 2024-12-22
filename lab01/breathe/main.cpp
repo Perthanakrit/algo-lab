@@ -5,17 +5,17 @@
 
 using namespace std;
 
-long double gcd_array(const vector<double> &arr);
-long double lcm_array(const vector<double> &arr);
+long double gcd_array(const vector<long double> &arr);
+long double lcm_array(const vector<long double> &arr);
 
 int main()
 {
-    vector<double> arr;
+    vector<long double> arr;
 
-    double num;
+    long double num;
     while (cin >> num)
     {
-        if (num < 1 || num > 1000)
+        if (num < 1.0l || num > 1000.0l)
         {
             continue;
         }
@@ -35,60 +35,51 @@ int main()
     return 0;
 }
 
-long double gcd(long long a, long long b)
+long double gcd(const long double &a, const long double &b)
 {
-    while (b != 0)
+    long long scale = 10000;
+    long long aInt = static_cast<long long>(round(a * scale));
+    long long bInt = static_cast<long long>(round(b * scale));
+    
+    while (bInt != 0LL)
     {
-        long long temp = b;
-        b = a % b;
-        a = temp;
+        long long temp = bInt;
+        bInt = aInt % bInt;
+        aInt = temp;
     }
-    return static_cast<long double>(a);
+    
+    return static_cast<long double>(aInt) / scale;
 }
 
-long double gcd_array(const vector<double> &arr)
+long double gcd_array(const vector<long double> &arr)
 {
-    const long long scale = 100000;
-    vector<long long> intArr(arr.size());
+    long double result = arr[0];
 
-    for (size_t i = 0; i < arr.size(); i++)
+    for (size_t i = 1; i < arr.size(); i++)
     {
-        intArr[i] = static_cast<long long>(round(arr[i] * scale));
-    }
-
-    long long result = intArr[0];
-    for (size_t i = 1; i < intArr.size(); i++)
-    {
-        result = static_cast<long long>(gcd(result, intArr[i]));
-    }
-
-    return static_cast<long double>(result) / scale;
-}
-
-long double lcm(long long a, long long b)
-{
-    return static_cast<long double>(a) * b / gcd(a, b);
-}
-
-long double lcm_array(const vector<double> &arr)
-{
-    const long long scale = 100000;
-    vector<long long> intArr(arr.size());
-
-    for (size_t i = 0; i < arr.size(); i++)
-    {
-        intArr[i] = static_cast<long long>(round(arr[i] * scale));
-    }
-
-    long double result = intArr[0];
-    for (size_t i = 1; i < intArr.size(); i++)
-    {
-        result = lcm(result, intArr[i]);
-        if (result > LLONG_MAX / scale)
+        result = gcd(result, arr[i]);
+        
+        if (result == 1.0l)
         {
-            return 0.0;
+            break;
         }
     }
 
-    return result / scale;
+    return result;
+}
+
+long double lcm(const long double &a, const long double &b)
+{
+    return a / gcd(a, b) * b;
+}
+
+long double lcm_array(const vector<long double> &arr)
+{
+    long double result = arr[0];
+    for (size_t i = 1; i < arr.size(); i++)
+    {
+        result = lcm(result, arr[i]);
+    }
+
+    return result;
 }
