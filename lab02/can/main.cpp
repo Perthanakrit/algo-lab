@@ -13,47 +13,39 @@ where:
 Hint: use the bisection & intermediate value theorem
 */
 
-float IRR(int n, int *cf_arr);
-
+double IRR(int n, int *cf_arr);
 
 int main() 
 {
     int n;
-    while (cin >> n)
+    while (cin >> n && n != 0 && n >= 1 && n <= 10)
     {
-        if (n > 10 || n < 1) break;
+        int *cf_arr = new int[n + 1];
 
-        int len = n + 2;
-        int *cf_arr = new int[len];
-
-        int i = 0;
-        for (; i < len - 1; i++)
+        for (int i = 0; i <= n; i++)
         {
-            int CF;
-            cin >> CF;
-            cf_arr[i] = CF;
+            cin >> cf_arr[i];
         }
-        cf_arr[i] = n;
         
-        float irr = IRR(n, cf_arr);
+        double irr = IRR(n, cf_arr);
         printf("%.2f\n", irr);
     }
     
     return 0;
 }
 
-float IRR(int n, int *cf_arr)
+double IRR(int n, int *cf_arr)
 {
-    float left = -0.9999;
-    float right = 1.0;   
-    float mid;
-    float epsilon = 0.000001; 
+    double left = -0.99;
+    double right = 1e7;   
+    double mid;
+    double epsilon = 1e-6; 
 
     while (right - left > epsilon)
     {
         mid = (left + right) / 2.0;
 
-        float npv = 0.0;
+        double npv = 0.0;
         for (int i = 0; i <= n; i++)
         {
             npv += cf_arr[i] / pow(1 + mid, i);
@@ -68,10 +60,6 @@ float IRR(int n, int *cf_arr)
             right = mid; 
         }
     }
-    // cout << IRR << endl;
-    // const double IRR = roundf(mid * 100) / 100;
-    // const bool isTrue = fmod(IRR, 0.5f) == 0.0f; 
-    // printf("%s\n", isTrue ? "true" : "false");
     
-    return mid;
+    return (left + right) / 2.0;
 }
