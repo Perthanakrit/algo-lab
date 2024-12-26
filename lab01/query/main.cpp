@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
-#include <algorithm>
 
 using namespace std;
 
@@ -110,8 +109,12 @@ public:
             string name = products[i].name;
             string lowerName = name;
             string lowerQuery = query;
-            transform(name.begin(), name.end(), lowerName.begin(), ::tolower);
-            transform(query.begin(), query.end(), lowerQuery.begin(), ::tolower);
+
+            for (char &c : lowerName)
+                c = tolower(c);
+                
+            for (char &c : lowerQuery)
+                c = tolower(c);
 
             if (lowerName.find(lowerQuery) != string::npos)
             {
