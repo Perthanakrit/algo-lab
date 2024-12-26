@@ -1,109 +1,15 @@
 #include <iostream>
-#include <string>
-#include <float.h>
+#include <vector>
 #include <cmath>
-#include <regex>
 
 using namespace std;
+
 struct Point
 {
-    double x, y;
+    long double x, y;
 };
 
-int compareX(const void *a, const void *b)
-{
-    Point *p1 = (Point *)a, *p2 = (Point *)b;
-    return (p1->x > p2->x) - (p1->x < p2->x);
-}
-
-int compareY(const void *a, const void *b)
-{
-    Point *p1 = (Point *)a, *p2 = (Point *)b;
-    return (p1->y > p2->y) - (p1->y < p2->y);
-}
-
-double dist(Point p1, Point p2)
-{
-    return sqrt((p1.x - p2.x) * (p1.x - p2.x) +
-                (p1.y - p2.y) * (p1.y - p2.y));
-}
-
-double bruteForce(Point P[], int n)
-{
-    double min = DBL_MAX;
-    for (int i = 0; i < n; ++i)
-        for (int j = i + 1; j < n; ++j)
-            if (dist(P[i], P[j]) < min)
-                min = dist(P[i], P[j]);
-    return min;
-}
-
-double min(double x, double y)
-{
-    return (x < y) ? x : y;
-}
-
-double stripClosest(Point strip[], int size, double d)
-{
-    double min = d; 
-
-    for (int i = 0; i < size; ++i)
-        for (int j = i + 1; j < size && (strip[j].y - strip[i].y) < min; ++j)
-            if (dist(strip[i], strip[j]) < min - 1e-9)
-                min = dist(strip[i], strip[j]);
-
-    return min;
-}
-
-double closestUtil(Point *Px, Point *Py, int n)
-{
-    
-    if (n <= 3)
-        return bruteForce(Px, n);
-
-    int mid = n / 2;
-    Point midPoint = Px[mid];
-    
-    Point Pyl[mid];     
-    Point Pyr[n - mid]; 
-    int li = 0, ri = 0; 
-    for (int i = 0; i < n; i++)
-    {
-        if (Py[i].x <= midPoint.x && li < mid)
-            Pyl[li++] = Py[i];
-        else
-            Pyr[ri++] = Py[i];
-    }
-
-    double dl = closestUtil(Px, Pyl, mid);
-    double dr = closestUtil(Px + mid, Pyr, n - mid);
-
-    double d = min(dl, dr);
-
-    Point *strip = new Point[n];
-    int j = 0;
-    for (int i = 0; i < n; i++)
-        if (abs(Py[i].x - midPoint.x) < d)
-            strip[j] = Py[i], j++;
-
-    return stripClosest(strip, j, d);
-}
-
-double closest(Point *P, int n)
-{
-    Point *Px = new Point[n];
-    Point *Py = new Point[n]; 
-    for (int i = 0; i < n; i++)
-    {
-        Px[i] = P[i];
-        Py[i] = P[i];
-    }
-
-    qsort(Px, n, sizeof(Point), compareX);
-    qsort(Py, n, sizeof(Point), compareY);
-    
-    return closestUtil(Px, Py, n);
-}
+long double closestPair(vector<Point> &points);
 
 int main()
 {
@@ -115,45 +21,194 @@ int main()
         return 0;
     }
 
-    for (int i = 0; i < t; i++)
+    while (t--)
     {
         int n;
         cin >> n;
         cin.ignore();
 
-        if (n < 2 || n > 2000)
+        if (n < 2 || n > 20000)
         {
             continue;
         }
 
-        Point *points = new Point[n];
+        vector<Point> points(n);
 
-        for (int j = 0; j < n; j++)
+        for (int i = 0; i < n; ++i)
         {
-            string input;
+            string x_input, y_input;
+            cin >> x_input >> y_input;
 
-            getline(cin, input);
-
-            regex r("\\(\\s*(\\d*\\.?\\d+)\\s*,\\s*(\\d*\\.?\\d+)\\s*\\)");
-            smatch m;
-            
-            double x = 0.0, y = 0.0;
-
-            if (regex_search(input, m, r))
-            {
-                x = stod(m[1]);
-                y = stod(m[2]);
-            }
-
-            Point p;
-            p.x = x;
-            p.y = y;
-
-            points[j] = p;
+            points[i].x = stold(x_input.substr(1, x_input.length() - 2));
+            points[i].y = stold(y_input.substr(0, y_input.length() - 1));
         }
 
-        printf("%.6lf\n", closest(points, n));
+        long double result = closestPair(points);
+        printf("%.6Lf\n", result);
     }
 
     return 0;
+}
+
+// Function to calculate distance between two points
+long double calculateDistance(const Point &p1, const Point &p2)
+{
+    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+}
+
+void mergeSortByX(vector<Point> &points, int left, int right, int mid)
+{
+    int n1 = right - left + 1;
+    int n2 = right - mid;
+
+    vector<Point> leftArr(n1);
+    vector<Point> rightArr(n2);
+
+    // Divide the array into two halves
+    for (int i = 0; i < n1; ++i)
+        leftArr[i] = points[left + i];
+    for (int i = 0; i < n2; ++i)
+        rightArr[i] = points[mid + 1 + i];
+
+    // Merge the two halves
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (leftArr[i].x < rightArr[j].x)
+        {
+            points[k++] = leftArr[i++];
+        }
+        else
+        {
+            points[k++] = rightArr[j++];
+        }
+    }
+
+    // Copy the remaining elements of leftArr
+    while (i < n1)
+    {
+        points[k++] = leftArr[i++];
+    }
+
+    // Copy the remaining elements of rightArr
+    while (j < n2)
+    {
+        points[k++] = rightArr[j++];
+    }
+}
+
+void mergeSortByY(vector<Point> &points, int left, int right, int mid)
+{
+    int n1 = right - left + 1;
+    int n2 = right - mid;
+
+    vector<Point> leftArr(n1);
+    vector<Point> rightArr(n2);
+
+    // Divide the array into two halves
+    for (int i = 0; i < n1; ++i)
+        leftArr[i] = points[left + i];
+    for (int i = 0; i < n2; ++i)
+        rightArr[i] = points[mid + 1 + i];
+
+    // Merge the two halves
+    int i = 0, j = 0, k = left;
+    while (i < n1 && j < n2) {
+        if (leftArr[i].y < rightArr[j].y)
+        {
+            points[k++] = leftArr[i++];
+        }
+        else
+        {
+            points[k++] = rightArr[j++];
+        }
+    }
+
+    // Copy the remaining elements of leftArr
+    while (i < n1)
+    {
+        points[k++] = leftArr[i++];
+    }
+
+    // Copy the remaining elements of rightArr
+    while (j < n2)
+    {
+        points[k++] = rightArr[j++];
+    }
+}
+
+long double closestPairRec(vector<Point> &pointsSortedX, vector<Point> &pointsSortedY)
+{
+    int n = pointsSortedX.size();
+
+    if (n <= 3)
+    {
+        // Brute force for small datasets
+        long double minDist = __LDBL_MAX__;
+        for (int i = 0; i < n; ++i)
+        {
+            for (int j = i + 1; j < n; ++j)
+            {
+                minDist = min(minDist, calculateDistance(pointsSortedX[i], pointsSortedX[j]));
+            }
+        }
+        return minDist;
+    }
+
+    // Split the points into two halves
+    int mid = n / 2;
+    Point midPoint = pointsSortedX[mid];
+
+    vector<Point> leftPointsX(pointsSortedX.begin(), pointsSortedX.begin() + mid);
+    vector<Point> rightPointsX(pointsSortedX.begin() + mid, pointsSortedX.end());
+
+    vector<Point> leftPointsY, rightPointsY;
+    for (const Point &p : pointsSortedY)
+    {
+        if (p.x <= midPoint.x)
+        {
+            leftPointsY.push_back(p);
+        }
+        else
+        {
+            rightPointsY.push_back(p);
+        }
+    }
+
+    // Recursive calls for left and right halves
+    long double leftMinDist = closestPairRec(leftPointsX, leftPointsY);
+    long double rightMinDist = closestPairRec(rightPointsX, rightPointsY);
+
+    // Find the smaller distance
+    long double minDist = min(leftMinDist, rightMinDist);
+
+    // Check for points in the strip
+    vector<Point> strip;
+    for (const Point &p : pointsSortedY)
+    {
+        if (abs(p.x - midPoint.x) < minDist)
+        {
+            strip.push_back(p);
+        }
+    }
+
+    for (size_t i = 0; i < strip.size(); ++i)
+    {
+        for (size_t j = i + 1; j < strip.size() && (strip[j].y - strip[i].y) < minDist; ++j)
+        {
+            minDist = min(minDist, calculateDistance(strip[i], strip[j]));
+        }
+    }
+
+    return minDist;
+}
+
+long double closestPair(vector<Point> &points)
+{
+    vector<Point> pointsSortedX(points);
+    vector<Point> pointsSortedY(points);
+
+    mergeSortByX(pointsSortedX, 0, pointsSortedX.size() - 1, pointsSortedX.size() / 2);
+    mergeSortByY(pointsSortedY, 0, pointsSortedY.size() - 1, pointsSortedY.size() / 2);
+
+    return closestPairRec(pointsSortedX, pointsSortedY);
 }
