@@ -1,7 +1,5 @@
 #include <iostream>
 #include <string>
-#include <cmath>
-#include <algorithm>
 
 using namespace std;
 
@@ -9,6 +7,7 @@ string addStrings(const string &a, const string &b);
 string subtractStrings(const string &a, const string &b);
 string multiplyStrings(const string &a, const string &b);
 string karatsuba(const string &x, const string &y);
+void reverseString(string &s);
 
 int main()
 {
@@ -44,7 +43,8 @@ string addStrings(const string &a, const string &b)
         result.push_back(sum % 10 + '0');
     }
 
-    reverse(result.begin(), result.end());
+    reverseString(result);
+
     return result;
 }
 
@@ -67,9 +67,12 @@ string subtractStrings(const string &a, const string &b)
         result.push_back(diff + '0');
     }
 
+    // Remove leading zeros
     while (result.size() > 1 && result.back() == '0')
         result.pop_back();
-    reverse(result.begin(), result.end());
+
+    reverseString(result);
+
     return result;
 }
 
@@ -91,8 +94,12 @@ string multiplyStrings(const string &a, const string &b)
         result[i] += carry;
     }
 
-    size_t pos = result.find_first_not_of('0');
-    return (pos == string::npos) ? "0" : result.substr(pos);
+    // Find the first non-zero position
+    size_t pos = 0;
+    while (pos < result.size() && result[pos] == '0')
+        ++pos;
+
+    return (pos == result.size()) ? "0" : result.substr(pos);
 }
 
 string karatsuba(const string &x, const string &y)
@@ -101,13 +108,13 @@ string karatsuba(const string &x, const string &y)
     if (n < 10 || m < 10)
         return multiplyStrings(x, y);
 
-    int maxLen = max(n, m);
+    int maxLen = (n > m) ? n : m;
     int halfLen = maxLen / 2;
 
-    string X1 = x.substr(0, max(0, n - halfLen));
-    string X0 = x.substr(max(0, n - halfLen));
-    string Y1 = y.substr(0, max(0, m - halfLen));
-    string Y0 = y.substr(max(0, m - halfLen));
+    string X1 = x.substr(0, (n > halfLen) ? n - halfLen : 0);
+    string X0 = x.substr((n > halfLen) ? n - halfLen : 0);
+    string Y1 = y.substr(0, (m > halfLen) ? m - halfLen : 0);
+    string Y0 = y.substr((m > halfLen) ? m - halfLen : 0);
 
     string P1 = karatsuba(X1, Y1);
     string P2 = karatsuba(X0, Y0);
@@ -117,4 +124,13 @@ string karatsuba(const string &x, const string &y)
     string part2 = subtractStrings(subtractStrings(P3, P1), P2) + string(halfLen, '0');
 
     return addStrings(addStrings(part1, part2), P2);
+}
+
+void reverseString(string &s)
+{
+    int i = 0, j = s.size() - 1;
+    while (i < j)
+    {
+        swap(s[i++], s[j--]);
+    }
 }
