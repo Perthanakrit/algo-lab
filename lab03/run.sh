@@ -79,7 +79,8 @@ compilation_time=$(( end_time - start_time ))
 # Show progress bar for compilation
 progress_bar $compilation_time
 
-if (( $? != 0 )); then
+if (( $? != 0 ))
+then
     echo "Compilation failed"
     echo "$errMessage" | grep --color -E "${mainFile}.* error|warning:"
     exit 1
